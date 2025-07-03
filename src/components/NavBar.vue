@@ -1,14 +1,22 @@
 <template>
   <nav class="navbar">
-    <router-link to="/" class="logo">Kanishka's Boutique</router-link>
+    <div class="logo-container">
+      <img src="https://www.shutterstock.com/image-vector/fashion-logo-design-template-suitable-600nw-2461938725.jpg" 
+           alt="Logo" 
+           class="logo-img">
+      <router-link :to="{ name: 'Home' }" class="logo-text">Kanishka Boutique</router-link>
+    </div>
     
     <div class="nav-links">
-      <router-link to="/">Home</router-link>
-      <router-link to="/about">About</router-link>
+      <router-link :to="{ name: 'Home' }">Home</router-link>
+      <router-link :to="{ name: 'About' }">About</router-link>
       
-      <!-- Conditional rendering based on auth state -->
-      <template v-if="isLoggedIn">
-        <router-link to="/products">Dress Collection</router-link>
+      <template v-if="isAuthenticated">
+        <router-link :to="{ name: 'Products' }">Dress Collection</router-link>
+        <router-link :to="{ name: 'Cart' }" class="cart-link">
+          🛒
+          <span class="cart-badge" v-if="cartQuantity > 0">{{ cartQuantity }}</span>
+        </router-link>
         <button @click="handleLogout" class="nav-button logout">Logout</button>
       </template>
       <template v-else>
@@ -19,33 +27,29 @@
 </template>
 
 <script>
+import { mapGetters, mapActions } from 'vuex'
+
 export default {
   name: 'NavBar',
   computed: {
-    isLoggedIn() {
-      // Check both auth methods for maximum compatibility
-      return this.$auth?.loggedIn || localStorage.getItem('isAuthenticated') === 'true'
-    }
+    ...mapGetters(['cartQuantity', 'isAuthenticated'])
   },
   methods: {
+    ...mapActions(['logout']),
     navigateToLogin() {
-      // Smooth navigation to login page
-      this.$router.push('/login')
+      this.$router.push({ name: 'Login' })
     },
-    handleLogout() {
-      // Clear all auth states
-      if (this.$auth) this.$auth.loggedIn = false
-      localStorage.removeItem('isAuthenticated')
-      
-      // Redirect to home with smooth transition
-      this.$router.push('/')
-      
-      // Optional: Show toast notification instead of alert
-      this.$emit('show-notification', 'Logged out successfully!')
+    async handleLogout() {
+      await this.logout()
+      if (this.$route.meta.requiresAuth) {
+        this.$router.push({ name: 'Home' })
+      }
     }
   }
 }
 </script>
+
+<!-- Keep your existing styles -->
 
 <style scoped>
 .navbar {
@@ -58,18 +62,38 @@ export default {
   position: sticky;
   top: 0;
   z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.logo {
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-img {
+  height: 40px;
+  width: auto;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+.logo-text {
   font-size: 1.5rem;
   font-weight: bold;
   color: white;
   text-decoration: none;
   transition: all 0.3s ease;
+  font-family: 'Playfair Display', serif;
 }
 
-.logo:hover {
+.logo-container:hover .logo-img {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+.logo-container:hover .logo-text {
   transform: scale(1.05);
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .nav-links {
@@ -85,6 +109,7 @@ export default {
   padding: 0.5rem;
   transition: all 0.3s ease;
   border-bottom: 2px solid transparent;
+  position: relative;
 }
 
 .nav-links a:hover {
@@ -114,6 +139,7 @@ export default {
 .login:hover {
   background-color: #3aa876;
   transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .logout {
@@ -124,5 +150,60 @@ export default {
 .logout:hover {
   background-color: #c0392b;
   transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Cart link styles */
+.cart-link {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding: 0.5rem 0.75rem;
+}
+
+.cart-link i {
+  font-size: 1.2rem;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ff5722;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    padding: 1rem;
+  }
+  
+  .nav-links {
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .logo-text {
+    font-size: 1.3rem;
+  }
 }
 </style>

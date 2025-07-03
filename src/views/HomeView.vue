@@ -2,25 +2,27 @@
   <div class="home-container">
     <div class="content-overlay">
       <h2>Welcome to Kanishka's Boutique</h2>
-      <p v-if="!loggedIn">
-        Please <router-link to="/login">Login</router-link> to see our dress collection.
+      <p v-if="!isAuthenticated">
+        Please <router-link :to="{ name: 'Login' }">Login</router-link> to see our dress collection.
       </p>
       <p v-else>
-        View our <router-link to="/products">Dress Collection</router-link>.
+        View our <router-link :to="{ name: 'Products' }">Dress Collection</router-link>.
       </p>
     </div>
   </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   computed: {
-    loggedIn() {
-      return localStorage.getItem('loggedIn') === 'true';
-    }
+    ...mapGetters(['isAuthenticated'])
   }
-};
+}
 </script>
+
+<!-- Keep your existing styles -->
 
 <style scoped>
 .home-container {
