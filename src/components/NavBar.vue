@@ -14,7 +14,7 @@
       <template v-if="isAuthenticated">
         <router-link :to="{ name: 'Products' }">Dress Collection</router-link>
         <router-link :to="{ name: 'Cart' }" class="cart-link">
-          🛒
+          <span class="cart-icon">🛒</span>
           <span class="cart-badge" v-if="cartQuantity > 0">{{ cartQuantity }}</span>
         </router-link>
         <button @click="handleLogout" class="nav-button logout">Logout</button>
@@ -37,19 +37,32 @@ export default {
   methods: {
     ...mapActions(['logout']),
     navigateToLogin() {
-      this.$router.push({ name: 'Login' })
+      if (this.$route.name !== 'Login') {
+        this.$router.push({ 
+          name: 'Login',
+          query: { redirect: this.$route.fullPath }
+        })
+      }
     },
     async handleLogout() {
-      await this.logout()
-      if (this.$route.meta.requiresAuth) {
-        this.$router.push({ name: 'Home' })
+      try {
+        await this.logout()
+        if (this.$route.meta.requiresAuth) {
+          this.$router.push({ name: 'Home' })
+        }
+        // If you're using toast notifications:
+        if (typeof this.$toast?.success === 'function') {
+          this.$toast.success('Logged out successfully')
+        }
+      } catch (error) {
+        if (typeof this.$toast?.error === 'function') {
+          this.$toast.error('Logout failed. Please try again.')
+        }
       }
     }
   }
 }
 </script>
-
-<!-- Keep your existing styles -->
 
 <style scoped>
 .navbar {
@@ -153,7 +166,6 @@ export default {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-/* Cart link styles */
 .cart-link {
   display: flex;
   align-items: center;
@@ -161,7 +173,7 @@ export default {
   padding: 0.5rem 0.75rem;
 }
 
-.cart-link i {
+.cart-icon {
   font-size: 1.2rem;
 }
 
@@ -188,7 +200,6 @@ export default {
   100% { transform: scale(1); }
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .navbar {
     flex-direction: column;

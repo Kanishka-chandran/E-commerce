@@ -31,28 +31,23 @@
 import { mapGetters, mapActions } from 'vuex'
 
 export default {
+  name: 'ProductCard',
   props: {
     product: {
       type: Object,
-      required: true
+      required: true,
+      validator: (product) => {
+        return ['id', 'name', 'price', 'image'].every(key => key in product)
+      }
     }
   },
   computed: {
     ...mapGetters(['getCartItem', 'cartItems']),
     isInCart() {
-      // Fallback to checking cartItems if getCartItem isn't available
-      if (this.getCartItem && typeof this.getCartItem === 'function') {
-        return this.getCartItem(this.product.id) !== undefined
-      }
-      return this.cartItems?.some(item => item.id === this.product.id) || false
+      return !!this.getCartItem(this.product.id)
     },
     cartQuantity() {
-      let item = null
-      if (this.getCartItem && typeof this.getCartItem === 'function') {
-        item = this.getCartItem(this.product.id)
-      } else {
-        item = this.cartItems?.find(item => item.id === this.product.id)
-      }
+      const item = this.getCartItem(this.product.id)
       return item ? item.quantity : 0
     }
   },
@@ -60,35 +55,34 @@ export default {
     ...mapActions(['addItemToCart', 'updateCartItem']),
     addToCart() {
       this.addItemToCart({ 
-        ...this.product, 
-        quantity: 1 
+        ...this.product,
+        quantity: 1
       })
+      // Optional: Show success message
+      if (typeof this.$toast?.success === 'function') {
+        this.$toast.success(`${this.product.name} added to cart!`)
+      }
     },
     increaseQuantity() {
-      if (this.cartQuantity < 100) { // Added max quantity limit
-        this.updateCartItem({ 
-          id: this.product.id, 
-          quantity: this.cartQuantity + 1 
+      if (this.cartQuantity < 100) {
+        this.updateCartItem({
+          id: this.product.id,
+          quantity: this.cartQuantity + 1
         })
       }
     },
     decreaseQuantity() {
-      if (this.cartQuantity > 1) {
-        this.updateCartItem({ 
-          id: this.product.id, 
-          quantity: this.cartQuantity - 1 
-        })
-      } else {
-        // Optional: Remove item completely if quantity reaches 0
-        this.updateCartItem({
-          id: this.product.id,
-          quantity: 0
-        })
-      }
+      const newQuantity = this.cartQuantity - 1
+      this.updateCartItem({
+        id: this.product.id,
+        quantity: newQuantity > 0 ? newQuantity : 0
+      })
     }
   }
 }
 </script>
+
+
 
 <style scoped>
 .card {

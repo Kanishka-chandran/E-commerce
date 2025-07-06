@@ -17,19 +17,19 @@ const routes = [
     path: '/products',
     name: 'Products',
     component: () => import('../views/ProductListView.vue'),
-    meta: { title: 'Dress Collection', requiresAuth: true }
+    meta: { title: 'Dress Collection' } // removed requiresAuth
   },
   {
     path: '/cart',
     name: 'Cart',
     component: () => import('../views/CartView.vue'),
-    meta: { title: 'Your Cart', requiresAuth: true }
+    meta: { title: 'Your Cart' } // removed requiresAuth
   },
   {
     path: '/checkout',
     name: 'Checkout',
     component: () => import('../views/CheckoutView.vue'),
-    meta: { title: 'Checkout', requiresAuth: true }
+    meta: { title: 'Checkout' } // removed requiresAuth
   },
   {
     path: '/login',
@@ -37,13 +37,12 @@ const routes = [
     component: () => import('../views/LoginView.vue'),
     meta: { title: 'Login' }
   },
-
   {
     path: '/payment/:id',
     name: 'Payment',
     component: () => import('../views/PaymentView.vue'),
     props: true,
-    meta: { title: 'Complete Payment', requiresAuth: true }
+    meta: { title: 'Complete Payment' } // removed requiresAuth
   },
   {
     path: '/:pathMatch(.*)*',
@@ -61,15 +60,10 @@ const router = createRouter({
   }
 })
 
+// Simplified navigation guard - only sets document title
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title || 'Kanishka Boutique'
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
-  
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: 'Login', query: { redirect: to.fullPath } })
-  } else {
-    next()
-  }
+  next()
 })
 
 export default router
