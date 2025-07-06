@@ -51,8 +51,6 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
-
 export default {
   data() {
     return {
@@ -60,11 +58,15 @@ export default {
       password: '',
       showPassword: false,
       error: '',
-      isLoading: false
+      isLoading: false,
+      // Demo credentials (remove in production)
+      demoUsers: [
+        { email: 'test@example.com', password: 'password123' },
+        { email: 'admin@example.com', password: 'admin123' }
+      ]
     }
   },
   methods: {
-    ...mapActions(['login']),
     validateEmail(email) {
       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       return re.test(email)
@@ -75,11 +77,12 @@ export default {
     togglePassword() {
       this.showPassword = !this.showPassword
     },
-    async handleLogin() {
+    handleLogin() {
       try {
         this.isLoading = true
         this.error = ''
         
+        // Validation
         if (!this.validateEmail(this.email)) {
           throw new Error('Please enter a valid email address')
         }
@@ -88,10 +91,22 @@ export default {
           throw new Error('Password must be at least 6 characters')
         }
         
-        await this.login()
+        // Check credentials against demo users
+        const user = this.demoUsers.find(
+          u => u.email === this.email && u.password === this.password
+        )
         
-        const redirect = this.$route.query.redirect || { name: 'Products' }
-        this.$router.push(redirect)
+        if (user) {
+          // Store authentication in localStorage
+          localStorage.setItem('isAuthenticated', 'true')
+          localStorage.setItem('userEmail', this.email)
+          
+          // Redirect to protected route or home
+          const redirect = this.$route.query.redirect || { name: 'Products' }
+          this.$router.push(redirect)
+        } else {
+          throw new Error('Invalid email or password')
+        }
       } catch (error) {
         this.error = error.message
       } finally {
@@ -99,8 +114,9 @@ export default {
       }
     },
     signInWithGoogle() {
-      // Implement actual Google auth in production
-      this.login()
+      // Mock Google authentication
+      localStorage.setItem('isAuthenticated', 'true')
+      localStorage.setItem('userEmail', 'google-user@example.com')
       this.$router.push({ name: 'Products' })
     }
   }
@@ -110,7 +126,7 @@ export default {
 <style scoped>
 .login-container {
   display: flex;
-  justify-content: flex-start; /* Changed from center to flex-start */
+  justify-content: flex-start;
   align-items: center;
   min-height: 100vh;
   background-image: url('https://hirikadhruti.com/cdn/shop/files/Hirika_And_Dhruti_Banner_2_Desktop_1.jpg?v=1709205996&width=3840');
@@ -119,7 +135,7 @@ export default {
   background-repeat: no-repeat;
   padding: 20px;
   position: relative;
-  padding-left: 10%; /* Add this to create consistent left spacing */
+  padding-left: 10%;
 }
 
 .login-overlay {
@@ -294,6 +310,11 @@ input:focus {
 }
 
 @media (max-width: 768px) {
+  .login-container {
+    padding-left: 5%;
+    justify-content: center;
+  }
+  
   .login-box {
     margin: 0 20px;
   }
